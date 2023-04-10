@@ -1,0 +1,1 @@
+npm run dts && rm -rf ./dist/packages

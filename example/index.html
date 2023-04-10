@@ -1,0 +1,8 @@
+<input type="file" id="upload" />
+
+<script type="module">
+    import { splitFile } from './dist/core.esm.js'
+    document.querySelector('#upload').addEventListener('change', e => {
+        splitFile({ file:e.target.files[0], chunkSize: 100  })
+    })
+</script>
