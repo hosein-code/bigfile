@@ -28,7 +28,6 @@ export const uploadFile = async (
   const uploadChain = new TaskChain();
   const settings = Object.assign({ file, chunkSize: 10, concurrent: 1 }, options || {})
   const chunks = await splitFile(settings);
-  console.log(settings);
   
   const splitChunks = to2DArray(chunks, settings.concurrent)
   splitChunks.map((chunks) => {
