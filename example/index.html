@@ -1,8 +1,23 @@
 <input type="file" id="upload" />
 
 <script type="module">
-    import { splitFile } from './dist/core.esm.js'
-    document.querySelector('#upload').addEventListener('change', e => {
-        splitFile({ file:e.target.files[0], chunkSize: 100  })
+    import { splitFile, uploadFile } from './dist/core.esm.js'
+    document.querySelector('#upload').addEventListener('change', async e => {
+        // const res = await splitFile({ file:e.target.files[0], chunkSize: 10  })
+        // console.log(res);
+        let flag = false;
+        window.uploadProcess = await uploadFile(e.target.files[0], (chunk) => {
+            return new Promise((resovle, reject) =>{
+                setTimeout(() => {
+                    console.log(chunk);
+                    if (chunk.chunkNum === 10 && !flag) {
+                        flag = true
+                        resovle(false)
+                    }
+                    resovle(true)
+                }, 1000)
+            })
+        }, { concurrent: 3 })
+        window.uploadProcess.start()
     })
 </script>

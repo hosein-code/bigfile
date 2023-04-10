@@ -1,4 +1,4 @@
-import SplitFileWorker from 'web-worker:./workers/FileSplit.worker'
+import SplitFileWorker from './workers/FileSplit.worker'
 export enum WORKER_STATE {
   USEING,
   WATING,
@@ -34,7 +34,9 @@ const getIdleWorker = (): WorkerInstance | null => {
   );
   if (worker) return worker;
   if (workers.length < MAX_WORKER_COUNT) {
-    const worker = new SplitFileWorker();
+    const blob = new Blob([`(${SplitFileWorker.toString()})()`], {type: 'text/javascript'})
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
     const workerInstance = { _instance: worker, _state: WORKER_STATE.WATING };
     return workerInstance;
   }

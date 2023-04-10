@@ -66,6 +66,7 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
 
   const cancel = () => {
     if (CHAIN_TASK.status !== "CANCELLED" && CHAIN_TASK.status !== "DONE") {
+      taskChain.clear()
       CURRENT_TASK = undefined;
       IS_PAUSE = false
     }

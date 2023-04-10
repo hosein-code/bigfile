@@ -2,7 +2,6 @@ const commonjs = require('@rollup/plugin-node-resolve')
 const resolve = require('@rollup/plugin-commonjs')
 const babel = require('@rollup/plugin-babel')
 const typescript = require('@rollup/plugin-typescript')
-const webWorkerLoader = require('rollup-plugin-web-worker-loader')
 
 module.exports = {
   input: './src/index.ts',
@@ -19,7 +18,6 @@ module.exports = {
     },
   ],
   plugins: [
-    webWorkerLoader(),
     typescript(),
     resolve({ extensions: ['.js', '.jsx'] }),
     commonjs(),
