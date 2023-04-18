@@ -6,9 +6,12 @@ export const createTask = (action: Task["action"]): Task => {
 
 export const execTask = async (target: Task): Promise<boolean> => {
   try {
+    target.status = 'PENGDING'
     const taskExecResult = await target.action();
+    target.status = taskExecResult && target.status === 'PENGDING' ? 'DONE' : 'FAILED'
     return taskExecResult;
   } catch (error) {
+    target.status = 'FAILED'
     console.error(error);
     return false;
   }
@@ -21,23 +24,24 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
     cancel: () => void
     task: Task
 } => {
-  let CURRENT_TASK = taskChain.get(startIndex);
+  let execIndex = startIndex;
   let IS_PAUSE = false;
-
   // 执行
   const exec = async (): Promise<boolean> => {
-    if (CURRENT_TASK?.current && !IS_PAUSE) {
-      const taskExecTag = await execTask(CURRENT_TASK.current);
-      if (taskExecTag) {
-        CURRENT_TASK = CURRENT_TASK.next;
-        CHAIN_TASK.status = "PENGDING";
-        return await exec();
-      } else {
-        CHAIN_TASK.status = "FAILED";
-        return false;
-      }
+    if (IS_PAUSE) {
+      CHAIN_TASK.status = 'PAUSE'
+      return true
     }
-    CHAIN_TASK.status = IS_PAUSE ? "PAUSE" : "DONE";
+    const task = taskChain.get(execIndex)
+    if (execIndex >= taskChain.size()) return true
+    if (task?.current) {
+      const taskExecTag = await execTask(task.current);
+      if (taskExecTag) {
+        execIndex ++
+        return await exec();
+      }
+      return false
+    }
     return true;
   };
 
@@ -60,14 +64,13 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
 
   const retry = () => {
     if (CHAIN_TASK.status === "FAILED") {
-      exec();
+      execTask(CHAIN_TASK)
     }
   };
 
   const cancel = () => {
     if (CHAIN_TASK.status !== "CANCELLED" && CHAIN_TASK.status !== "DONE") {
       taskChain.clear()
-      CURRENT_TASK = undefined;
       IS_PAUSE = false
     }
   };

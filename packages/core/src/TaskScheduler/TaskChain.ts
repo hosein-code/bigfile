@@ -53,14 +53,22 @@ export class TaskChain implements LinkedArrayList<Task> {
     return false;
   }
 
+  replace(index:number, data: Task) {
+    if (index >= this.size() || index < 0) return false;
+    if (!this.list[index].current) return false;
+    this.remove(this.list[index].current!)
+    this.insert(index, data)
+    return true;
+  }
+
   insert(index: number, data: Task) {
     if (index >= this.size() || index < 0) return false;
     const node: LinkdNode<Task> = { current: data };
     node.pre = this.list[index - 1];
-    node.next = this.list[index + 1];
+    node.next = this.list[index];
     this.list[index - 1].next = node;
-    this.list[index + 1].pre = node;
-    this.list.splice(index, 1, node);
+    this.list[index].pre = node;
+    this.list.splice(index, 0, node);
     return true;
   }
 
