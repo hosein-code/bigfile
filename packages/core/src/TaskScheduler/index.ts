@@ -8,7 +8,9 @@ export const execTask = async (target: Task): Promise<boolean> => {
   try {
     target.status = 'PENGDING'
     const taskExecResult = await target.action();
-    target.status = taskExecResult && target.status === 'PENGDING' ? 'DONE' : 'FAILED'
+    if (target.status === 'PENGDING') {
+      target.status = taskExecResult ? 'DONE' : 'FAILED'
+    }
     return taskExecResult;
   } catch (error) {
     target.status = 'FAILED'
@@ -24,20 +26,24 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
     cancel: () => void
     task: Task
 } => {
-  let execIndex = startIndex;
+
+  let TASK_ITERATOR  = taskChain.get(startIndex);
   let IS_PAUSE = false;
   // 执行
+  
+
   const exec = async (): Promise<boolean> => {
+    let CURRENT_TASK = TASK_ITERATOR?.current
     if (IS_PAUSE) {
+      // 暂停
       CHAIN_TASK.status = 'PAUSE'
       return true
     }
-    const task = taskChain.get(execIndex)
-    if (execIndex >= taskChain.size()) return true
-    if (task?.current) {
-      const taskExecTag = await execTask(task.current);
+    if (CURRENT_TASK) {
+      // 任务执行
+      const taskExecTag = await execTask(CURRENT_TASK);
       if (taskExecTag) {
-        execIndex ++
+        TASK_ITERATOR = TASK_ITERATOR?.next
         return await exec();
       }
       return false
@@ -50,6 +56,7 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
 
   const start = () => {
     if (CHAIN_TASK.status === "TODO" || CHAIN_TASK.status === "PAUSE") {
+      CHAIN_TASK.status = "PENGDING";
       IS_PAUSE = false;
       execTask(CHAIN_TASK);
     }
@@ -57,19 +64,21 @@ export const execTaskChain = (startIndex: number = 0, taskChain: TaskChain): {
 
   const pause = () => {
     if (CHAIN_TASK.status === "PENGDING") {
-      IS_PAUSE = true;
       CHAIN_TASK.status = "PAUSE";
+      IS_PAUSE = true;
     }
   };
 
   const retry = () => {
     if (CHAIN_TASK.status === "FAILED") {
+      CHAIN_TASK.status = "PENGDING";
       execTask(CHAIN_TASK)
     }
   };
 
   const cancel = () => {
     if (CHAIN_TASK.status !== "CANCELLED" && CHAIN_TASK.status !== "DONE") {
+      CHAIN_TASK.status = "CANCELLED";
       taskChain.clear()
       IS_PAUSE = false
     }

@@ -4,18 +4,24 @@ interface LinkdNode<T> {
   current?: T;
 }
 
-interface LinkedArrayList<T> {
-  list: Array<LinkdNode<T>>;
+interface LinkList<T> {
   node: LinkdNode<T>;
-  size: () => number;
+  size: number;
   append: (data: T) => void;
-  remove: (data: T) => boolean;
-  insert: (index: number, data: T) => boolean;
+  remove: (data: T) => void;
+  insert: (index: number, data: T) => void;
   get: (index: number) => LinkdNode<T> | undefined;
   clear: () => void;
+  each: (fn: (node: LinkdNode<T>, index: number) => void) => void
 }
 
-export type TASK_STATUS = 'TODO' | 'PENGDING' | 'PAUSE' | 'DONE' | 'FAILED' | 'CANCELLED'
+export type TASK_STATUS =
+  | "TODO"
+  | "PENGDING"
+  | "PAUSE"
+  | "DONE"
+  | "FAILED"
+  | "CANCELLED";
 
 export interface Task {
   $id: symbol;
@@ -23,67 +29,84 @@ export interface Task {
   action: () => Promise<boolean>;
 }
 
-export class TaskChain implements LinkedArrayList<Task> {
-  list: Array<LinkdNode<Task>> = [];
+export class TaskChain implements LinkList<Task> {
+  size: number = 0;
   node: LinkdNode<Task> = {};
+  header: LinkdNode<Task> | undefined;
 
   constructor() {}
-  size() {
-    return this.list.length;
-  }
+
   append(data: Task) {
-    if (this.node.current) {
-      const node: LinkdNode<Task> = { current: data };
-      node.pre = this.node;
-      this.node.next = node;
-      this.node = node;
+    if (this.header) {
+      const appendNode: LinkdNode<Task> = { current: data };
+      appendNode.pre = this.node;
+      this.node.next = appendNode;
+      this.node = appendNode;
     } else {
       this.node.current = data;
+      this.header = this.node
     }
-    this.list.push(this.node);
-  }
-  remove(data: Task) {
-    const index = this.list.findIndex((item) => item.current?.$id === data.$id);
-    if (index > -1) {
-      this.list[index - 1].next = this.list[index + 1];
-      this.list[index + 1].pre = this.list[index - 1];
-      this.list.splice(index, 1);
-      return true;
-    }
-    return false;
+    this.size ++
   }
 
-  replace(index:number, data: Task) {
-    if (index >= this.size() || index < 0) return false;
-    if (!this.list[index].current) return false;
-    this.remove(this.list[index].current!)
-    this.insert(index, data)
-    return true;
+  each(fn: (node: LinkdNode<Task>, index: number) => void) {
+    let iterator: LinkdNode<Task> | undefined = this.header;
+    let index = 0;
+    while (iterator) {
+      const next = iterator.next;
+      iterator && fn(iterator, index);
+      iterator = next
+      index++;
+    }
+  }
+
+  remove(data: Task) {
+    this.each((node: LinkdNode<Task>) => {
+      if (data.$id === node?.current?.$id) {
+        node.pre && (node.pre.next = node.next);
+        node.next && (node.next.pre = node.pre);
+      }
+    });
+    this.size --
+  }
+
+  replace(index: number, data: Task) {
+    this.each((node: LinkdNode<Task>, nIndex: number) => {
+      if (nIndex === index) {
+        node.current = data
+      }
+    });
   }
 
   insert(index: number, data: Task) {
-    if (index >= this.size() || index < 0) return false;
-    const node: LinkdNode<Task> = { current: data };
-    node.pre = this.list[index - 1];
-    node.next = this.list[index];
-    this.list[index - 1].next = node;
-    this.list[index].pre = node;
-    this.list.splice(index, 0, node);
-    return true;
+    this.each((node: LinkdNode<Task>, nIndex: number) => {
+      if (nIndex === index) {
+        const insertNode: LinkdNode<Task> = { current: data }
+        insertNode.pre = node
+        insertNode.next = node.next
+        node.next && (node.next.pre = insertNode)
+        node.next = insertNode
+      }
+    });
+    this.size ++
   }
 
   clear() {
-    this.list.forEach((l) => {
-      l.current && (l.current = undefined);
-      l.next && (l.next = undefined);
-      l.pre && (l.pre = undefined);
-    });
-    this.node = {};
-    this.list = [];
+    this.each((node) => {
+      node.current = undefined
+      node.pre = undefined
+      node.next = undefined
+    })
+    this.header = undefined
+    this.node = {}
+    this.size = 0
   }
 
   get(index: number) {
-    if (index >= this.size() || index < 0) return undefined;
-    return this.list[index];
+    let target: LinkdNode<Task> | undefined;
+    this.each((node, nIndex) => {
+      if (index === nIndex) { target = node }
+    })
+    return target
   }
 }
