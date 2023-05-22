@@ -1,6 +1,13 @@
 {
     "name": "@bigfile/react",
     "version": "0.0.1",
+    "main": "./index.ts",
+    "scripts": {
+    },
     "dependencies": {
+        "@types/react": "^18.2.6"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0"
     }
 }

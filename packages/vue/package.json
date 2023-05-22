@@ -2,5 +2,8 @@
     "name": "@bigfile/vue",
     "version": "0.0.1",
     "dependencies": {
+    },
+    "peerDependencies": {
+        "vue": "^3.0.0"
     }
 }

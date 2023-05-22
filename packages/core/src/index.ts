@@ -20,9 +20,11 @@ const to2DArray = <T>(array: Array<T>, length: number): Array<T[]> => {
   return split;
 };
 
+type UploadFn = (chunk: FileChunk) => Promise<boolean>
+
 export const uploadFile = async (
   file: File,
-  upload: (chunk: FileChunk) => Promise<boolean>,
+  upload: UploadFn,
   options?: UploadOptions
 ) => {
   const uploadChain = new TaskChain();
@@ -58,3 +60,4 @@ export const uploadFile = async (
 };
 
 export { splitFile, destroy, TaskChain, createTask, execTaskChain, execTask };
+export type { FileChunk, UploadOptions, UploadFn  }
