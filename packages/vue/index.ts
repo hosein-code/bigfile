@@ -1,6 +1,6 @@
 import { uploadFile } from "@bigfile/core";
 import type { UploadFn } from "@bigfile/core";
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 
 interface FileItem {
   name: string;
